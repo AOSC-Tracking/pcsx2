@@ -190,9 +190,6 @@ void SetupWizardDialog::setupLanguagePage()
 		nullptr, m_ui.language, "UI", "Language", QtHost::GetDefaultLanguage());
 	connect(
 		m_ui.language, &QComboBox::currentIndexChanged, this, &SetupWizardDialog::languageChanged);
-
-	SettingWidgetBinder::BindWidgetToBoolSetting(
-		nullptr, m_ui.autoUpdateEnabled, "AutoUpdater", "CheckAtStartup", true);
 }
 
 void SetupWizardDialog::themeChanged()
