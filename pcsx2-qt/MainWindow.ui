@@ -550,14 +550,6 @@
     <string>&amp;Discord Server...</string>
    </property>
   </action>
-  <action name="actionCheckForUpdates">
-   <property name="icon">
-    <iconset theme="download-2-line"/>
-   </property>
-   <property name="text">
-    <string>Check for &amp;Updates...</string>
-   </property>
-  </action>
   <action name="actionAboutQt">
    <property name="icon">
     <iconset resource="resources/resources.qrc">
