@@ -57,7 +57,6 @@ namespace QtHost
 	};
 
 	static void UpdateGlyphRangesAndClearCache(QWidget* dialog_parent, const std::string_view language);
-	static bool DownloadMissingFont(QWidget* dialog_parent, const char* font_name, const std::string& path);
 	static const FontInfo* GetFontInfo(const std::string_view language);
 
 	static constexpr const char* DEFAULT_IMGUI_FONT_NAME = "Roboto-Regular.ttf";
@@ -286,22 +285,11 @@ void QtHost::UpdateGlyphRangesAndClearCache(QWidget* dialog_parent, const std::s
 	if (fi)
 		imgui_font_name = fi->imgui_font_name;
 
-	// Check for the presence of font files.
 	std::string font_path;
-	if (imgui_font_name)
-	{
-		// Non-standard fonts always go to the user resources directory, since they're downloaded on demand.
-		font_path = Path::Combine(EmuFolders::UserResources,
-			SmallString::from_format("fonts" FS_OSPATH_SEPARATOR_STR "{}", imgui_font_name));
-		if (!DownloadMissingFont(dialog_parent, imgui_font_name, font_path))
-			font_path.clear();
-	}
-	if (font_path.empty())
-	{
-		// Use the default font.
-		font_path = EmuFolders::GetOverridableResourcePath(SmallString::from_format(
-			"fonts" FS_OSPATH_SEPARATOR_STR "{}", DEFAULT_IMGUI_FONT_NAME));
-	}
+
+	// Use the default font.
+	font_path = EmuFolders::GetOverridableResourcePath(SmallString::from_format(
+		"fonts" FS_OSPATH_SEPARATOR_STR "{}", DEFAULT_IMGUI_FONT_NAME));
 
 	// Called on UI thread, so we need to do this on the CPU/GS thread if it's active.
 	if (g_emu_thread)
@@ -327,33 +315,6 @@ void QtHost::UpdateGlyphRangesAndClearCache(QWidget* dialog_parent, const std::s
 		ImGuiManager::SetFontPath(std::move(font_path));
 		Host::ClearTranslationCache();
 	}
-}
-
-bool QtHost::DownloadMissingFont(QWidget* dialog_parent, const char* font_name, const std::string& path)
-{
-	if (FileSystem::FileExists(path.c_str()))
-		return true;
-
-	{
-		QMessageBox msgbox(dialog_parent);
-		msgbox.setWindowTitle(qApp->translate("MainWindow", "Missing Font File"));
-		msgbox.setWindowIcon(QtHost::GetAppIcon());
-		msgbox.setWindowModality(Qt::WindowModal);
-		msgbox.setIcon(QMessageBox::Critical);
-		msgbox.setTextFormat(Qt::RichText);
-		msgbox.setText(qApp->translate("MainWindow",
-			"The font file '%1' is required for the On-Screen Display and Big Picture Mode to show messages in your language.<br><br>"
-			"Do you want to download this file now? These files are usually less than 10 megabytes in size.<br><br>"
-			"<strong>If you do not download this file, on-screen messages will not be readable.</strong>")
-			.arg(QLatin1StringView(font_name)));
-		msgbox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-		if (msgbox.exec() != QMessageBox::Yes)
-			return false;
-	}
-
-	const QString progress_title = qApp->translate("MainWindow", "Downloading Files");
-	std::string url = QtHost::GetRuntimeDownloadedResourceURL(font_name);
-	return QtHost::DownloadFile(dialog_parent, progress_title, std::move(url), path);
 }
 
 static constexpr const QtHost::FontInfo s_font_info[] = {
